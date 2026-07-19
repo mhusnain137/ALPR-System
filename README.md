@@ -75,7 +75,7 @@ License-Plate-Recognition/
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/License-Plate-Recognition.git
+git clone https://github.com/mhusnain137/License-Plate-Recognition.git
 ```
 
 Navigate to the project folder:
@@ -133,15 +133,28 @@ For each processed image, the application generates:
 
 ---
 
-## Screenshots
+## How It Works
 
-Add screenshots of:
+1. **Image Input**
+   - The user uploads an image or provides an image URL through the Flask web interface.
 
-- Home page
-- Detection result
-- Cropped plate
-- Annotated image
-- CSV output
+2. **Image Processing**
+   - The source image is saved locally for further processing.
+
+3. **License Plate Detection**
+   - `crop_worker.py` uses **YOLOv8** to detect license plates, crop each detected plate, and generate an annotated image with bounding boxes.
+
+4. **Text Recognition**
+   - `ocr_worker.py` uses **PaddleOCR** to recognize the license plate text. Multiple preprocessing techniques are applied to improve OCR accuracy.
+
+5. **Post-processing**
+   - The recognized text is cleaned and normalized, and the registration/model year is extracted when available.
+
+6. **Result Storage**
+   - The recognized information (plate text, confidence score, model year, and timestamp) is automatically appended to `output/plate_texts.csv`.
+
+7. **Display**
+   - The application displays the annotated image, cropped license plate(s), and OCR results in the browser.
 
 ---
 
