@@ -1,4 +1,4 @@
-# License Plate Recognition
+# Automatic License Plate Recognition
 
 An Automatic License Plate Recognition (ALPR) system built with **YOLOv8**, **PaddleOCR**, **OpenCV**, and **Flask**. The application detects license plates from uploaded images, extracts the plate text using OCR, identifies the registration year (if available), and stores the results in a CSV file with timestamps.
 
