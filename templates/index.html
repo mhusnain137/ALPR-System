@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plate Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --asphalt: #15171B;
+    --panel: #1D2025;
+    --panel-line: #2B2F36;
+    --plate-white: #F3EFE4;
+    --plate-line: #1B1B1B;
+    --highway-green: #1C5E42;
+    --signal-amber: #E7A93A;
+    --text-main: #E9E6DE;
+    --text-muted: #90949C;
+    --danger: #C25450;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(231,169,58,0.06), transparent 40%),
+      var(--asphalt);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 48px 20px 80px;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  header.page-head { margin-bottom: 40px; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--signal-amber);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 18px;
+    height: 2px;
+    background: var(--signal-amber);
+    display: inline-block;
+  }
+  h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 42px;
+    letter-spacing: 0.01em;
+    margin: 0 0 8px;
+  }
+  header.page-head p {
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 560px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 14px;
+    padding: 24px;
+  }
+
+  /* ---- Input card ---- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--asphalt);
+    border: 1px solid var(--panel-line);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 9px 0;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .tab-btn.active { background: var(--panel-line); color: var(--text-main); }
+
+  .panel-section { display: none; }
+  .panel-section.active { display: block; }
+
+  .dropzone {
+    border: 2px dashed var(--panel-line);
+    border-radius: 10px;
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .dropzone.drag-over { border-color: var(--signal-amber); background: rgba(231,169,58,0.06); }
+  .dropzone svg { opacity: 0.6; margin-bottom: 10px; }
+  .dropzone p { margin: 0; font-size: 13.5px; color: var(--text-muted); }
+  .dropzone .fname {
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--signal-amber);
+    word-break: break-all;
+  }
+  input[type="file"] { display: none; }
+
+  .url-row label { display: block; font-size: 12.5px; color: var(--text-muted); margin-bottom: 8px; }
+  input[type="url"] {
+    width: 100%;
+    background: var(--asphalt);
+    border: 1px solid var(--panel-line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  input[type="url"]:focus { outline: none; border-color: var(--signal-amber); }
+  input[type="url"]::placeholder { color: #565a62; }
+
+  .hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 20px;
+    background: var(--signal-amber);
+    color: #1a1400;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 0;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+  }
+  .submit-btn:hover { filter: brightness(1.08); }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:focus-visible { outline: 2px solid var(--text-main); outline-offset: 2px; }
+
+  .error-msg {
+    background: rgba(194,84,80,0.12);
+    border: 1px solid rgba(194,84,80,0.4);
+    color: #E9A6A3;
+    font-size: 13.5px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    white-space: pre-line;
+  }
+
+  /* ---- Results column ---- */
+  .results-col { display: flex; flex-direction: column; gap: 20px; }
+
+  .annotated-wrap {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--panel-line);
+    background: #0f1114;
+  }
+  .annotated-wrap img { width: 100%; display: block; max-height: 420px; object-fit: contain; }
+  .annotated-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border-top: 1px solid var(--panel-line);
+  }
+
+  .plates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 18px;
+  }
+
+  .plate-result { animation: rise 0.35s ease both; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .crop-preview {
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    border: 1px solid var(--panel-line);
+    border-bottom: none;
+    background: #0f1114;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .crop-preview img { width: 100%; height: 100%; object-fit: contain; }
+
+  .plate-shell {
+    background: var(--plate-white);
+    border: 3px solid var(--plate-line);
+    border-radius: 0 0 8px 8px;
+    position: relative;
+    padding: 16px 16px 10px;
+    box-shadow: inset 0 0 0 3px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .plate-shell::after {
+    content: "";
+    position: absolute;
+    top: -60%; left: -20%;
+    width: 60%; height: 220%;
+    background: linear-gradient(120deg, rgba(255,255,255,0.5), rgba(255,255,255,0) 60%);
+    transform: rotate(20deg);
+    pointer-events: none;
+  }
+  .bolt { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #4a4a4a; box-shadow: inset 0 1px 1px rgba(255,255,255,0.3); }
+  .bolt.tl { top: 7px; left: 9px; }
+  .bolt.tr { top: 7px; right: 9px; }
+
+  .plate-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 0.06em;
+    color: #16181a;
+    text-align: center;
+    line-height: 1.15;
+    word-break: break-word;
+  }
+  .plate-number.empty {
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: normal;
+    color: #7a746a;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .plate-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px dashed rgba(0,0,0,0.15);
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .province-tag {
+    background: var(--highway-green);
+    color: #F3EFE4;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 2px 8px;
+    border-radius: 5px;
+  }
+  .province-tag.none {
+    background: transparent;
+    color: #9a9488;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    padding: 0;
+  }
+  .model-year { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #4a463e; }
+
+  .conf-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 0 2px; }
+  .conf-label { font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; min-width: 30px; }
+  .conf-track { flex: 1; height: 5px; background: var(--panel-line); border-radius: 4px; overflow: hidden; }
+  .conf-fill { height: 100%; background: linear-gradient(90deg, var(--danger), var(--signal-amber), #6FCF97); border-radius: 4px; }
+  .conf-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-main); min-width: 32px; text-align: right; }
+
+  .csv-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .csv-note .dot { width: 6px; height: 6px; border-radius: 50%; background: #6FCF97; display: inline-block; }
+
+  .placeholder-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 60px 20px;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .placeholder-result svg { opacity: 0.35; margin-bottom: 14px; }
+
+  .no-plates-msg {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="eyebrow">ALPR &middot; Local Tool</div>
+    <h1>Plate Reader</h1>
+    <p>Upload a full photo from your PC, or paste an image link straight from Chrome. It detects and crops the plate, reads the number/model year/province, and saves every result to your CSV automatically.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ INPUT CARD ============ -->
+    <div class="card">
+      {% if error %}
+        <div class="error-msg">{{ error }}</div>
+      {% endif %}
+
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="upload">Upload from PC</button>
+        <button type="button" class="tab-btn" data-tab="link">Paste link</button>
+      </div>
+
+      <form action="/predict" method="POST" enctype="multipart/form-data" id="plate-form">
+
+        <div class="panel-section active" data-panel="upload">
+          <div class="dropzone" id="dropzone">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#E7A93A" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            <p>Click to choose, or drag a photo here</p>
+            <div class="fname" id="fname"></div>
+          </div>
+          <input type="file" name="image_file" id="image_file" accept=".jpg,.jpeg,.png,.bmp,.webp">
+        </div>
+
+        <div class="panel-section" data-panel="link">
+          <div class="url-row">
+            <label for="image_url">Image URL</label>
+            <input type="url" name="image_url" id="image_url" placeholder="https://...">
+          </div>
+          <div class="hint">Right-click an image in Chrome &rarr; "Copy image address" &rarr; paste here.</div>
+        </div>
+
+        <button type="submit" class="submit-btn">Read Plate</button>
+      </form>
+    </div>
+
+    <!-- ============ RESULTS COLUMN ============ -->
+    <div class="results-col">
+      {% if results is none %}
+        <div class="card">
+          <div class="placeholder-result">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#90949C" stroke-width="1.4"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 12h4M14 12h3"/></svg>
+            Result yahan dikhega -- ek image upload ya link paste karke "Read Plate" dabao.
+          </div>
+        </div>
+      {% else %}
+
+        {% if annotated_url %}
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div class="annotated-wrap">
+            <img src="{{ annotated_url }}" alt="Detected plates">
+          </div>
+          <div class="annotated-label">Detected {{ results|length }} plate(s)</div>
+        </div>
+        {% endif %}
+
+        {% if results|length == 0 %}
+          <div class="card">
+            <div class="no-plates-msg">Is image mein koi plate detect nahi ho saki. Ek clearer/closer photo try karo.</div>
+          </div>
+        {% else %}
+          <div class="plates-grid">
+            {% for r in results %}
+            <div class="plate-result">
+              <div class="crop-preview">
+                <img src="{{ r.crop_url }}" alt="Cropped plate">
+              </div>
+              <div class="plate-shell">
+                <span class="bolt tl"></span>
+                <span class="bolt tr"></span>
+                {% if r.plate_text %}
+                  <div class="plate-number">{{ r.plate_text }}</div>
+                {% else %}
+                  <div class="plate-number empty">Text clearly detect nahi ho saki.</div>
+                {% endif %}
+                <div class="plate-footer">
+                  {% if r.model_year %}
+                    <span class="model-year">'{{ r.model_year }}</span>
+                  {% endif %}
+                </div>
+                <div class="conf-row">
+                  <span class="conf-label">OCR</span>
+                  <div class="conf-track">
+                    <div class="conf-fill" style="width: {{ (r.confidence * 100) | round | int }}%;"></div>
+                  </div>
+                  <span class="conf-pct">{{ (r.confidence * 100) | round | int }}%</span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="card" style="padding: 14px 20px;">
+            <div class="csv-note"><span class="dot"></span> {{ results|length }} result(s) saved to output/plate_texts.csv</div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.panel-section');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector(`.panel-section[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('image_file');
+  const fname = document.getElementById('fname');
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) fname.textContent = fileInput.files[0].name;
+  });
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); });
+  });
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      fname.textContent = e.dataTransfer.files[0].name;
+    }
+  });
+
+  document.getElementById('plate-form').addEventListener('submit', (e) => {
+    const hasFile = fileInput.files.length > 0;
+    const hasUrl = document.getElementById('image_url').value.trim().length > 0;
+    if (!hasFile && !hasUrl) {
+      e.preventDefault();
+      alert('Pehle ek image upload karo ya link paste karo.');
+    }
+  });
+</script>
+</body>
+</html>
